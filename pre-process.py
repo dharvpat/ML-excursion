@@ -53,6 +53,7 @@ def pre_process(ticker_data,moving_window):
     ticker_data.insert(1,'RSI', rsi)
 
     #Insert Change in average prices per interval to the DataFrame
+    change = change/ticker_data_average
     ticker_data.insert(1, 'Change', change)
     ticker_data.fillna(0,inplace = True) #Change the first row to 0 since we don't have data before the first data point
 
