@@ -1,16 +1,17 @@
 import tensorflow as tf
 
-def model(num_features, num_actions, history_depth, loss_function):
+def model(num_features, num_actions, history_depth, loss_function, optimizer):
     model = tf.keras.Sequential([ #Will get more complicated as we learn more, but a good starting point
-        tf.keras.layers.Dense(1024, activation='sigmoid', input_shape=(num_features,history_depth)),
-        tf.keras.layers.Dense(1024, activation='relu'),
-        tf.keras.layers.Dense(512, activation = 'sigmoid'),
-        tf.keras.layers.Dense(256, activation = 'relu'),
-        tf.keras.layers.Dense(128, activation = 'sigmoid'),
-        tf.keras.layers.Dense(64, activation = 'relu'),
-        tf.keras.layers.Dense(32, activation = 'sigmoid'),
+        tf.keras.layers.Dense(16384, activation='tanh', input_shape=(history_depth,num_features)),
+        tf.keras.layers.Dense(8192, activation='sigmoid'),
+        tf.keras.layers.Dense(4096, activation='tanh'),
+        tf.keras.layers.Dense(2048, activation='sigmoid'),
+        tf.keras.layers.Dense(1024, activation='tanh'),
+        tf.keras.layers.Dense(256, activation='sigmoid'),
+        tf.keras.layers.Dense(64, activation='tanh'),
+        tf.keras.layers.Dense(16, activation='sigmoid'),
         tf.keras.layers.Dense(num_actions, activation='tanh')
     ])
+    model.compile(loss=loss_function,optimizer = optimizer, metrics=['accuracy'])
     model.summary()
-    model.compile(loss=loss_function,optimizer = 'sgd', metrics=['accuracy'])
     return model
