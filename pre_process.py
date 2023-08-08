@@ -2,7 +2,7 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 import numpy as np
 
-def pre_process(ticker_data,moving_window):
+def pre_process(ticker_data,Moving_window):
     #Calculate and insert Average price along each interval
     ticker_data_close = ticker_data['Close'].to_numpy()
     ticker_data_open = ticker_data['Open'].to_numpy()
@@ -42,7 +42,6 @@ def pre_process(ticker_data,moving_window):
     ticker_data.insert(1,'Signal_MACD_strength',signal_above_macd)
 
     #Calculate Moving average slope
-    Moving_window = 5
     ma = ticker_data['Average'].rolling(window = Moving_window).mean()
     ticker_data.insert(1, 'Moving Average', ma)
     ma_slope = ticker_data['Moving Average'].diff()/Moving_window
@@ -53,11 +52,8 @@ def pre_process(ticker_data,moving_window):
     ticker_data.insert(1,'RSI', rsi)
 
     #Insert Change in average prices per interval to the DataFrame
-    change = change/ticker_data_average
+    change = change/ticker_data_average[1:]
     ticker_data.insert(1, 'Change', change)
     ticker_data.fillna(0,inplace = True) #Change the first row to 0 since we don't have data before the first data point
 
     return ticker_data
-
-ticker = 'AAPL'
-data = yf.download(ticker, start='2020-09-01', end='2023-07-01',interval='1d')
