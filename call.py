@@ -3,11 +3,12 @@ import pre_process
 import yfinance as yf
 import tensorflow as tf
 import numpy as np
+from keras.optimizers import SGD
 
 ticker = 'AAPL'
 data = yf.download(ticker, start='1980-09-01', end='2023-07-01',interval='1d')
 
-optimizer = 'RMSprop'
+optimizer = opt = SGD(lr=0.05, momentum=0.9)
 num_features = 5 #RSI, Moving average slope, Change in moving average, Signal, MACD, Signal vs MACD, Volume
 num_actions = 1 #How many outputs do we want
 history_depth = 50 # num of interval points which are accessible to the model before right now
