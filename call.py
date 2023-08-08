@@ -3,17 +3,17 @@ import pre_process
 import yfinance as yf
 import tensorflow as tf
 import numpy as np
-from keras.optimizers import SGD
+from keras.optimizers import SGD, RMSprop, Adam
 
 ticker = 'AAPL'
-data = yf.download(ticker, start='1980-09-01', end='2023-07-01',interval='1d')
+data = yf.download(ticker, start='1980-01-01', end='2023-01-01',interval='1d')
 
-optimizer = opt = SGD(lr=0.05, momentum=0.9)
-num_features = 5 #RSI, Moving average slope, Change in moving average, Signal, MACD, Signal vs MACD, Volume
+optimizer = SGD(learning_rate=0.99, momentum=0.99)
+num_features = 3 #RSI, Moving average slope, Signal, MACD, Volume
 num_actions = 1 #How many outputs do we want
-history_depth = 50 # num of interval points which are accessible to the model before right now
-loss_function = 'mean_squared_error'
-validation_set_number = 100
+history_depth = 10 # num of interval points which are accessible to the model before right now
+loss_function = 'mean_squared_logarithmic_error'
+validation_set_number = 20
 
 data1 = pre_process.pre_process(data,Moving_window=14)
 
@@ -23,10 +23,11 @@ MACD = data1['MACD_Value'].to_numpy()
 signal = data1['Signal_Value'].to_numpy()
 Volume = data1['Volume'].to_numpy()
 percentchange = data1['Change'].to_numpy()
+MACD_strength = data1['Signal_MACD_strength'].to_numpy()
 percentchange = percentchange[1:]
 percentchange = np.append(percentchange,np.NaN)
 
-data_to_input = np.column_stack((RSI,ma_slope,MACD,signal,Volume,percentchange))
+data_to_input = np.column_stack((RSI,Volume,MACD_strength,percentchange))
 
 training_data = data_to_input[:-validation_set_number*history_depth]
 validation_data = data_to_input[-validation_set_number*history_depth:]
@@ -52,9 +53,6 @@ for i in range(len(y_data_val)):
         testing_labels.append(1)
     else:
         testing_labels.append(0)
-
-print(x_data_train[0])
-print(y_data_train[0])
 
 y_data_train = np.array(training_labels)
 y_data_val = np.array(testing_labels)
