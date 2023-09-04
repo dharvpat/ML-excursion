@@ -1,6 +1,7 @@
-import yfinance as yf
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import math
 
 def pre_process(ticker_data,Moving_window):
     #Calculate and insert Average price along each interval
@@ -56,4 +57,36 @@ def pre_process(ticker_data,Moving_window):
     ticker_data.insert(1, 'Change', change)
     ticker_data.fillna(0,inplace = True) #Change the first row to 0 since we don't have data before the first data point
 
+    #Calculate and insert typical price
+    typical_price = (ticker_data['High'] + ticker_data['Close'] + ticker_data['Low'])/3
+    ticker_data.insert(1,'Typical_Price', typical_price)
+
+    #Calculate upper & lower Bollinger Bands
+    #calculate std over last 20 days:
+    std_array = np.zeros(len(typical_price))
+    for i in range(Moving_window, len(typical_price)):
+        std_array[i] = np.std(typical_price[i-Moving_window:i])
+    BOLu = ma + 2*std_array
+    BOLl = ma - 2*std_array
+    ma_BOLu = BOLu.rolling(window = Moving_window).mean()
+    ma_BOLl = BOLl.rolling(window = Moving_window).mean()
+    squeeze = np.zeros(len(typical_price))
+    BOLl_slope = ma_BOLl.diff()/Moving_window
+    BOLu_slope = ma_BOLu.diff()/Moving_window
+    for i in range (Moving_window, len(typical_price)):
+        if (BOLl_slope[i] > 0 and BOLu_slope[i] < 0 and math.isclose(BOLl_slope[i] + BOLu_slope[i], 0,rel_tol=8e-1)):
+            squeeze[i] = 1
+            print('Squeeze detected at {}'.format(i))
+        else:
+            squeeze[i] = 0
+
+    #calculate difference between today's typical price and moving avg
+    diff = typical_price - ma
+    ticker_data.insert(1,'Diff_bw_typ_and_ma', diff)
+    ticker_data.insert(1,'Squeeze', squeeze)
+    ticker_data.insert(1,'BOLu', BOLu)
+    ticker_data.insert(1,'BOLl', BOLl)
+    ticker_data.insert(1,'BOLu_s', np.abs(BOLu_slope))
+    ticker_data.insert(1,'BOLl_s', np.abs(BOLl_slope))
+    ticker_data.fillna(0,inplace = True) #Change the first row to 0 since we don't have data before the first data point
     return ticker_data
